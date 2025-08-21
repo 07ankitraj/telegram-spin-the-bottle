@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Spin the Bottle</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>Spin the Bottle Web Version</h1>
+    <input id="room" placeholder="Room name" />
+    <input id="name" placeholder="Your name" />
+    <button id="joinBtn">Join</button>
+    <div id="players"></div>
+    <button id="spinBtn" disabled>Spin!</button>
+    <div id="result"></div>
+    <script>
+        const socket = io();
+        let room = '';
+        let name = '';
+
+        document.getElementById('joinBtn').onclick = function () {
+            room = document.getElementById('room').value;
+            name = document.getElementById('name').value;
+            if (room && name) {
+                socket.emit('join', { room: room, user: name });
+                document.getElementById('spinBtn').disabled = false;
+            }
+        };
+
+        document.getElementById('spinBtn').onclick = function () {
+            socket.emit('spin', { room: room });
+        };
+
+        socket.on('players', function (players) {
+            document.getElementById('players').innerText = 'Players: ' + players.join(', ');
+        });
+
+        socket.on('spinResult', function (chosen) {
+            document.getElementById('result').innerText = 'Chosen: ' + chosen;
+        });
+    </script>
+</body>
+
+</html>
