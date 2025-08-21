@@ -30,6 +30,16 @@ def on_spin(data):
         chosen = random.choice(games[room])
         emit('spinResult', chosen, room=room)
 
+# Chat message handler
+
+
+@socketio.on('chat')
+def on_chat(data):
+    room = data['room']
+    user = data['user']
+    message = data['message']
+    emit('chat', {'user': user, 'message': message}, room=room)
+
 
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=10000)

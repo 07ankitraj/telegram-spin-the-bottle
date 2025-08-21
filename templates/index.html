@@ -7,37 +7,206 @@
 </head>
 
 <body>
-    <h1>Spin the Bottle Web Version</h1>
-    <input id="room" placeholder="Room name" />
-    <input id="name" placeholder="Your name" />
-    <button id="joinBtn">Join</button>
-    <div id="players"></div>
-    <button id="spinBtn" disabled>Spin!</button>
-    <div id="result"></div>
+    <div id="profile-modal" style="
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    ">
+        <div
+            style="background: #fff; border-radius: 16px; padding: 32px 24px; min-width: 300px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); text-align: center;">
+            <div style="font-size: 1.2em; color: #888; margin-bottom: 12px;">Profile settings</div>
+            <div style="margin-bottom: 16px;">Tell about yourself. It's necessary to match partners up at the table
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="font-weight: bold; margin-right: 8px;">Gender:</label>
+                <button id="gender-male"
+                    style="background: #e6f0fa; border: 2px solid #2196f3; border-radius: 8px; padding: 8px 16px; margin-right: 8px; cursor: pointer;">
+                    <span style="font-size: 1.5em;">&#128104;</span>
+                </button>
+                <button id="gender-female"
+                    style="background: #fde6f0; border: 2px solid #e91e63; border-radius: 8px; padding: 8px 16px; cursor: pointer;">
+                    <span style="font-size: 1.5em;">&#128105;</span>
+                </button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="font-weight: bold; margin-right: 8px;">Age:</label>
+                <select id="age-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc;">
+                    <option value="">--</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                </select>
+            </div>
+            <button id="continue-btn"
+                style="background: #888; color: #fff; border: none; border-radius: 8px; padding: 10px 32px; font-size: 1em; cursor: pointer; opacity: 0.7;"
+                disabled>Continue</button>
+        </div>
+    </div>
+
+    <div id="game-ui"
+        style="display:none; height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="margin-bottom: 10px;">
+                <input id="room" placeholder="Room name" />
+                <input id="name" placeholder="Your name" />
+                <button id="joinBtn">Join</button>
+            </div>
+            <div id="circle-container" style="position: relative; width: 350px; height: 350px; margin: 0 auto;">
+                <img id="bottle" src="https://cdn.pixabay.com/photo/2013/07/12/13/58/bottle-147010_1280.png"
+                    alt="bottle"
+                    style="position: absolute; left: 50%; top: 50%; width: 80px; height: 40px; transform: translate(-50%, -50%) rotate(0deg); transition: transform 2s cubic-bezier(.17,.67,.83,.67); z-index: 2; cursor: pointer;" />
+                <div id="players-circle"></div>
+            </div>
+            <div id="result" style="margin-top: 20px; font-size: 1.2em; font-weight: bold;"></div>
+        </div>
+        <div id="chat-container"
+            style="width: 100%; max-width: 500px; margin: 0 auto 20px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 12px;">
+            <div id="chat-messages" style="height: 120px; overflow-y: auto; margin-bottom: 8px; font-size: 1em;"></div>
+            <div style="display: flex;">
+                <input id="chat-input" type="text" placeholder="Write a message here"
+                    style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc;" />
+                <button id="chat-send"
+                    style="margin-left: 8px; padding: 8px 16px; border-radius: 6px; background: #2196f3; color: #fff; border: none; cursor: pointer;">Send</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Profile modal logic
+        let selectedGender = null;
+        let selectedAge = '';
+        const genderMaleBtn = document.getElementById('gender-male');
+        const genderFemaleBtn = document.getElementById('gender-female');
+        const ageSelect = document.getElementById('age-select');
+        const continueBtn = document.getElementById('continue-btn');
+
+        function updateContinueState() {
+            if (selectedGender && ageSelect.value) {
+                continueBtn.disabled = false;
+                continueBtn.style.opacity = 1;
+            } else {
+                continueBtn.disabled = true;
+                continueBtn.style.opacity = 0.7;
+            }
+        }
+
+        genderMaleBtn.onclick = function () {
+            selectedGender = 'male';
+            genderMaleBtn.style.borderColor = '#2196f3';
+            genderFemaleBtn.style.borderColor = '#ccc';
+            updateContinueState();
+        };
+        genderFemaleBtn.onclick = function () {
+            selectedGender = 'female';
+            genderFemaleBtn.style.borderColor = '#e91e63';
+            genderMaleBtn.style.borderColor = '#ccc';
+            updateContinueState();
+        };
+        ageSelect.onchange = function () {
+            selectedAge = ageSelect.value;
+            updateContinueState();
+        };
+        continueBtn.onclick = function () {
+            document.getElementById('profile-modal').style.display = 'none';
+            document.getElementById('game-ui').style.display = '';
+        };
+
+        // Game logic
         const socket = io();
         let room = '';
         let name = '';
+        let playersList = [];
+        let spinning = false;
 
         document.getElementById('joinBtn').onclick = function () {
             room = document.getElementById('room').value;
             name = document.getElementById('name').value;
             if (room && name) {
-                socket.emit('join', { room: room, user: name });
-                document.getElementById('spinBtn').disabled = false;
+                socket.emit('join', { room: room, user: name, gender: selectedGender, age: selectedAge });
             }
         };
 
-        document.getElementById('spinBtn').onclick = function () {
-            socket.emit('spin', { room: room });
+        // Draw players in a circle
+        function drawPlayersCircle(players) {
+            const container = document.getElementById('players-circle');
+            container.innerHTML = '';
+            const n = players.length;
+            const radius = 140;
+            for (let i = 0; i < n; i++) {
+                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+                const x = radius * Math.cos(angle) + 150;
+                const y = radius * Math.sin(angle) + 150;
+                const playerDiv = document.createElement('div');
+                playerDiv.style.position = 'absolute';
+                playerDiv.style.left = x + 'px';
+                playerDiv.style.top = y + 'px';
+                playerDiv.style.width = '60px';
+                playerDiv.style.textAlign = 'center';
+                playerDiv.style.zIndex = 1;
+                // Placeholder avatar
+                playerDiv.innerHTML = `<div style="width:48px;height:48px;border-radius:50%;background:#eee;margin:0 auto 4px auto;overflow:hidden;"><img src='https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(players[i])}' style='width:100%;height:100%;object-fit:cover;'/></div><div style='font-size:0.9em;'>${players[i]}</div>`;
+                container.appendChild(playerDiv);
+            }
+        }
+
+        // Bottle spin logic
+        document.getElementById('bottle').onclick = function () {
+            if (spinning || playersList.length < 2) return;
+            spinning = true;
+            // Randomly select a player
+            const chosenIdx = Math.floor(Math.random() * playersList.length);
+            // Calculate angle to chosen player
+            const angle = (360 / playersList.length) * chosenIdx;
+            const extraSpins = 5 * 360; // 5 full spins for effect
+            const totalAngle = extraSpins + angle;
+            const bottle = document.getElementById('bottle');
+            bottle.style.transform = `translate(-50%, -50%) rotate(${totalAngle}deg)`;
+            setTimeout(() => {
+                document.getElementById('result').innerText = `The bottle points to: ${playersList[chosenIdx]}!`;
+                spinning = false;
+            }, 2000);
         };
 
         socket.on('players', function (players) {
-            document.getElementById('players').innerText = 'Players: ' + players.join(', ');
+            playersList = players;
+            drawPlayersCircle(players);
         });
 
-        socket.on('spinResult', function (chosen) {
-            document.getElementById('result').innerText = 'Chosen: ' + chosen;
+        // Chat logic
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+
+        chatSend.onclick = function () {
+            const msg = chatInput.value.trim();
+            if (msg && room && name) {
+                socket.emit('chat', { room: room, user: name, message: msg });
+                chatInput.value = '';
+            }
+        };
+        chatInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') chatSend.onclick();
+        });
+
+        socket.on('chat', function (data) {
+            const div = document.createElement('div');
+            div.innerHTML = `<b>${data.user}:</b> ${data.message}`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         });
     </script>
 </body>
