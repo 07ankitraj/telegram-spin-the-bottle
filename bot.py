@@ -1,5 +1,19 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+# Web App URL for Telegram mini app
+WEB_APP_URL = "https://telegram-spin-the-bottle.onrender.com/"
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [KeyboardButton(text="Play Spin the Bottle 🎲",
+                        web_app=WebAppInfo(url=WEB_APP_URL))]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text(
+        "Welcome! Click below to play Spin the Bottle.",
+        reply_markup=reply_markup
+    )
 
 # In-memory storage for games: chat_id -> player list
 games = {}
@@ -36,6 +50,8 @@ async def spin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(
     "8208906356:AAH_hzMBgaE-eyBnrH01dA6I2mp_pMoI1WI").build()
+
+app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("join", join))
 app.add_handler(CommandHandler("leave", leave))
 app.add_handler(CommandHandler("spin", spin))
